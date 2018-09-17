@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <uz.mukhammadakbar.image.viewer.ShadowLayout
+    <uz.mukhammadakbar.image.viewer.views.ShadowLayout
         android:id="@+id/shadowLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -16,5 +16,5 @@
             android:layout_centerInParent="true"
             android:scaleType="centerInside" />
 
-    </uz.mukhammadakbar.image.viewer.ShadowLayout>
+    </uz.mukhammadakbar.image.viewer.views.ShadowLayout>
 </FrameLayout>

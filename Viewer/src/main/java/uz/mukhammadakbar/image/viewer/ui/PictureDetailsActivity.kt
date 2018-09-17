@@ -1,4 +1,4 @@
-package uz.mukhammadakbar.image.viewer
+package uz.mukhammadakbar.image.viewer.ui
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
@@ -10,11 +10,8 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.ViewTreeObserver
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
@@ -27,47 +24,47 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
 import com.github.chrisbanes.photoview.PhotoView
+import uz.mukhammadakbar.image.viewer.utils.Constants
+import uz.mukhammadakbar.image.viewer.R
+import uz.mukhammadakbar.image.viewer.views.ShadowLayout
 
 class PictureDetailsActivity : Activity() {
 
     private var mBitmapDrawable: BitmapDrawable? = null
-    private val colorizerMatrix = ColorMatrix()
-    internal lateinit var mBackground: ColorDrawable
-    internal var mLeftDelta: Int = 0
-    internal var mTopDelta: Int = 0
-    internal var mWidthScale: Float = 0.toFloat()
-    internal var mHeightScale: Float = 0.toFloat()
-    private var drawableHeight: Int? = 0
-    private var drawableWidth: Int? = 0
-    private var mImageView: PhotoView? = null
-    private var mTopLevelLayout: FrameLayout? = null
-    private var mShadowLayout: ShadowLayout? = null
+    private val colorizeMatrix = ColorMatrix()
+    private lateinit var mBackground: ColorDrawable
+    private var mLeftDelta: Int = 0
+    private var mTopDelta: Int = 0
+    private var mWidthScale: Float = 0.toFloat()
+    private var mHeightScale: Float = 0.toFloat()
+    private lateinit var mImageView: PhotoView
+    private lateinit var mTopLevelLayout: FrameLayout
+    private lateinit var mShadowLayout: ShadowLayout
     private var mOriginalOrientation: Int = 0
+
     private var isResourcesReady: Boolean = false
     private var isAnimated: Boolean = false
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.picture_info)
-        mImageView = findViewById<PhotoView>(R.id.imageView)
+        mImageView = findViewById(R.id.imageView)
         mTopLevelLayout = findViewById(R.id.topLevelLayout)
         mShadowLayout = findViewById(R.id.shadowLayout)
 
         val bundle = intent.extras
-        val drawable = bundle!!.getInt("$PACKAGE_NAME.resourceId", 0)
-        val errorDrawable = bundle.getInt("$PACKAGE_NAME.errorImg", 0)
-        val url = bundle.getString("$PACKAGE_NAME.url", "")
-        Log.d("urlImage", "url: $url")
-
-        val thumbnailTop = bundle.getInt("$PACKAGE_NAME.top")
-        val thumbnailLeft = bundle.getInt("$PACKAGE_NAME.left")
-        val thumbnailWidth = bundle.getInt("$PACKAGE_NAME.width")
-        val thumbnailHeight = bundle.getInt("$PACKAGE_NAME.height")
-        mOriginalOrientation = bundle.getInt("$PACKAGE_NAME.orientation")
+        val drawable = bundle.getInt(Constants.DEFAULT_IMG, 0)
+        val errorDrawable = bundle.getInt(Constants.ERROR_IMG, 0)
+        val url = bundle.getString(Constants.IMAGE_URL, "")
+        val thumbnailTop = bundle.getInt(Constants.Y_COORD)
+        val thumbnailLeft = bundle.getInt(Constants.X_COORD)
+        val thumbnailWidth = bundle.getInt(Constants.WIDTH)
+        val thumbnailHeight = bundle.getInt(Constants.HEIGHT)
+        mOriginalOrientation = bundle.getInt(Constants.ORIENTATION)
 
         mBackground = ColorDrawable(Color.BLACK)
-        mTopLevelLayout?.background = mBackground
-        var bitmap: Bitmap? = null
+        mTopLevelLayout.background = mBackground
+        var bitmap: Bitmap?
         when {
             url != "" -> Glide.with(applicationContext).load(url)
                     .apply(RequestOptions()
@@ -77,14 +74,13 @@ class PictureDetailsActivity : Activity() {
                             .fitCenter())
                     .listener(object : RequestListener<Drawable> {
                         override fun onLoadFailed(e: GlideException?, model: Any, target: Target<Drawable>, isFirstResource: Boolean): Boolean {
-                            Log.d("failed", "failed")
                             return false
                         }
 
                         override fun onResourceReady(resource: Drawable, model: Any, target: Target<Drawable>, dataSource: DataSource, isFirstResource: Boolean): Boolean {
-                            bitmap = BitmapUtils.getBitmap(resources, resource)
+                            bitmap = (resource as BitmapDrawable).bitmap
                             mBitmapDrawable = BitmapDrawable(resources, bitmap)
-                            mImageView?.setImageDrawable(mBitmapDrawable)
+                            mImageView.setImageDrawable(mBitmapDrawable)
 
                             if (!isAnimated && !isResourcesReady){
                                 readyForStartAnimation(savedInstanceState, thumbnailWidth, thumbnailHeight,
@@ -92,28 +88,25 @@ class PictureDetailsActivity : Activity() {
                                 isResourcesReady = true
                                 isAnimated = true
                             }
-                            Log.d("onResourceReady", "onResourceReady")
-
                             return false
                         }
                     })
-                    .into(mImageView!!)
+                    .into(mImageView)
             drawable != 0 -> {
-                bitmap = BitmapUtils.getBitmap(resources, ContextCompat.getDrawable(applicationContext, drawable))
+                bitmap = ContextCompat.getDrawable(applicationContext, drawable)?.let { (it as BitmapDrawable).bitmap }
                 mBitmapDrawable = BitmapDrawable(resources, bitmap)
-                mImageView?.setImageDrawable(mBitmapDrawable)
+                mImageView.setImageDrawable(mBitmapDrawable)
             }
             errorDrawable != 0 -> {
-                bitmap = BitmapUtils.getBitmap(resources, ContextCompat.getDrawable(applicationContext, errorDrawable))
+                bitmap = ContextCompat.getDrawable(applicationContext, errorDrawable)?.let { (it as BitmapDrawable).bitmap }
                 mBitmapDrawable = BitmapDrawable(resources, bitmap)
-                mImageView?.setImageDrawable(mBitmapDrawable)
+                mImageView.setImageDrawable(mBitmapDrawable)
             }
         }
 
         if (isResourcesReady && !isAnimated) {
             readyForStartAnimation(savedInstanceState, thumbnailWidth, thumbnailHeight,
                     thumbnailLeft, thumbnailTop)
-            Log.d("isResourcesReady", "isResourcesReady")
             isAnimated = true
             isResourcesReady = true
         }
@@ -121,24 +114,17 @@ class PictureDetailsActivity : Activity() {
 
     fun readyForStartAnimation(savedInstanceState: Bundle?, thumbnailWidth: Int,
                                thumbnailHeight: Int, thumbnailLeft: Int, thumbnailTop: Int){
-        Log.d("savedInstance","${savedInstanceState == null}")
         if (savedInstanceState == null) {
-            val observer = mImageView!!.viewTreeObserver
+            val observer = mImageView.viewTreeObserver
             observer.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
-
                 override fun onPreDraw(): Boolean {
-                    mImageView!!.viewTreeObserver.removeOnPreDrawListener(this)
-
+                    mImageView.viewTreeObserver.removeOnPreDrawListener(this)
                     val screenLocation = IntArray(2)
-                    mImageView?.getLocationOnScreen(screenLocation)
+                    mImageView.getLocationOnScreen(screenLocation)
                     mLeftDelta = thumbnailLeft - screenLocation[0]
                     mTopDelta = thumbnailTop - screenLocation[1]-100
-                    Log.d("screebLocation", screenLocation[1].toString())
-                    Log.d("thumbnailTop", thumbnailTop.toString())
-                    Log.d("thumbnailHeight", thumbnailHeight.toString())
-
-                    mWidthScale = thumbnailWidth.toFloat() / mImageView!!.width
-                    mHeightScale = (thumbnailHeight.toFloat() / mImageView!!.height)
+                    mWidthScale = thumbnailWidth.toFloat() / mImageView.width
+                    mHeightScale = (thumbnailHeight.toFloat() / mImageView.height)
                     runEnterAnimation()
                     return true
                 }
@@ -146,35 +132,29 @@ class PictureDetailsActivity : Activity() {
         }
     }
 
-    @SuppressLint("ObjectAnimatorBinding")
     fun runEnterAnimation() {
         val duration = ANIM_DURATION.toLong()
-        Log.d("runEnterANimation", "run Enter")
+        mImageView.pivotX = 0f
+        mImageView.pivotY = 0f
+        mImageView.scaleX = mWidthScale
+        mImageView.scaleY = mHeightScale
+        mImageView.translationX = mLeftDelta.toFloat()
+        mImageView.translationY = mTopDelta.toFloat()
 
-        mImageView!!.pivotX = 0f
-        mImageView!!.pivotY = 0f
-        mImageView!!.scaleX = mWidthScale
-        mImageView!!.scaleY = mHeightScale
-        mImageView!!.translationX = mLeftDelta.toFloat()
-        mImageView!!.translationY = mTopDelta.toFloat()
+        mImageView.animate()
+                .setDuration(duration)
+                .scaleX(1f)
+                .scaleY(1f)
+                .translationX(0f)
+                .translationY(0f)
+                .interpolator = sDecelerator
 
-
-        mImageView?.animate()
-                ?.setDuration(duration)
-                ?.scaleX(1f)
-                ?.scaleY(1f)
-                ?.translationX(0f)
-                ?.translationY(0f)
-                ?.interpolator = sDecelerator
-
-        ObjectAnimator.ofInt(mBackground,
-                "alpha", 0, 255).apply {
+        ObjectAnimator.ofInt(mBackground, "alpha", 0, 255).apply {
             this.duration = duration
             start()
         }
 
-        ObjectAnimator.ofFloat(this@PictureDetailsActivity,
-                "saturation", 0f, 1f).apply {
+        ObjectAnimator.ofFloat(this, "saturation", 0f, 1f).apply {
             this.duration = duration
             start()
         }
@@ -190,26 +170,23 @@ class PictureDetailsActivity : Activity() {
         val duration = ANIM_DURATION.toLong()
         val fadeOut: Boolean
         if (resources.configuration.orientation != mOriginalOrientation) {
-            mImageView?.pivotX = (mImageView!!.width / 2).toFloat()
-            mImageView?.pivotY = (mImageView!!.height / 2).toFloat()
+            mImageView.pivotX = (mImageView.width / 2).toFloat()
+            mImageView.pivotY = (mImageView.height / 2).toFloat()
             mLeftDelta = 0
             mTopDelta = 0
             fadeOut = true
         } else {
             fadeOut = false
         }
-
-        Log.d("mLeftDelta", mLeftDelta.toString())
-        Log.d("mTopDelta", mTopDelta.toString())
-        mImageView?.animate()
-                ?.setDuration(duration)
-                ?.scaleX(mWidthScale)
-                ?.scaleY(mHeightScale)
-                ?.translationX(mLeftDelta.toFloat())
-                ?.translationY(mTopDelta.toFloat())
-                ?.withEndAction(endAction)
+        mImageView.animate()
+                .setDuration(duration)
+                .scaleX(mWidthScale)
+                .scaleY(mHeightScale)
+                .translationX(mLeftDelta.toFloat())
+                .translationY(mTopDelta.toFloat())
+                .withEndAction(endAction)
         if (fadeOut) {
-            mImageView?.animate()?.alpha(0f)
+            mImageView.animate()?.alpha(0f)
         }
 
         ObjectAnimator.ofInt(mBackground, "alpha", 0).apply {
@@ -217,28 +194,26 @@ class PictureDetailsActivity : Activity() {
             start()
         }
 
-        ObjectAnimator.ofFloat(mShadowLayout,
-                "shadowDept", 1f, 0f).apply {
+        ObjectAnimator.ofFloat(mShadowLayout, "shadowDept", 1f, 0f).apply {
             this.duration = duration
             start()
         }
 
-        ObjectAnimator.ofFloat(this@PictureDetailsActivity,
-                "saturation", 1f, 0f).apply {
+        ObjectAnimator.ofFloat(this@PictureDetailsActivity, "saturation", 1f, 0f).apply {
             this.duration = duration
             start()
         }
     }
 
     override fun onBackPressed() {
-        mImageView?.scale = 1f
+        mImageView.scale = 1f
         runExitAnimation(Runnable { finish() })
     }
 
     fun setSaturation(value: Float) {
-        colorizerMatrix.setSaturation(value)
-        val colorizerFilter = ColorMatrixColorFilter(colorizerMatrix)
-        mBitmapDrawable?.colorFilter = colorizerFilter
+        colorizeMatrix.setSaturation(value)
+        val colorizeFilter = ColorMatrixColorFilter(colorizeMatrix)
+        mBitmapDrawable?.colorFilter = colorizeFilter
     }
 
     override fun finish() {
@@ -247,10 +222,8 @@ class PictureDetailsActivity : Activity() {
     }
 
     companion object {
-
         private val sDecelerator = DecelerateInterpolator()
         private val sAccelerator = AccelerateInterpolator()
-        private val PACKAGE_NAME = "uz.mukhammadakbar.ImageViewer"
-        private val ANIM_DURATION = 400
+        private const val ANIM_DURATION = 400
     }
 }

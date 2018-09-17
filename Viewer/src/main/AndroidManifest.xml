@@ -2,7 +2,7 @@
     package="uz.mukhammadakbar.image.viewer" >
 
     <application>
-        <activity android:name=".PictureDetailsActivity"
+        <activity android:name=".ui.PictureDetailsActivity"
             android:theme="@style/Transparent"/>
     </application>
 </manifest>

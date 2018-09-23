@@ -12,6 +12,7 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
+import android.util.Log
 import android.view.ViewTreeObserver
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
@@ -26,6 +27,7 @@ import com.bumptech.glide.request.target.Target
 import com.github.chrisbanes.photoview.PhotoView
 import uz.mukhammadakbar.image.viewer.utils.Constants
 import uz.mukhammadakbar.image.viewer.R
+import uz.mukhammadakbar.image.viewer.views.DraggableImageView
 import uz.mukhammadakbar.image.viewer.views.ShadowLayout
 
 class PictureDetailsActivity : Activity() {
@@ -37,7 +39,7 @@ class PictureDetailsActivity : Activity() {
     private var mTopDelta: Int = 0
     private var mWidthScale: Float = 0.toFloat()
     private var mHeightScale: Float = 0.toFloat()
-    private lateinit var mImageView: PhotoView
+    private lateinit var mImageView: DraggableImageView
     private lateinit var mTopLevelLayout: FrameLayout
     private lateinit var mShadowLayout: ShadowLayout
     private var mOriginalOrientation: Int = 0
@@ -62,7 +64,8 @@ class PictureDetailsActivity : Activity() {
         val thumbnailHeight = bundle.getInt(Constants.HEIGHT)
         mOriginalOrientation = bundle.getInt(Constants.ORIENTATION)
 
-        mBackground = ColorDrawable(Color.BLACK)
+        mBackground = ColorDrawable(ContextCompat.getColor(applicationContext, R.color.black))
+                .apply { alpha = 0 }
         mTopLevelLayout.background = mBackground
         var bitmap: Bitmap?
         when {
@@ -110,6 +113,20 @@ class PictureDetailsActivity : Activity() {
             isAnimated = true
             isResourcesReady = true
         }
+
+        mImageView.setOnDragChangeListener(object : DraggableImageView.OnDragChangeListener{
+            override fun onDragFinished() {
+                finish()
+            }
+
+            override fun onDragChanged(difference: Float) {
+                val differ = if (difference > 1) 1f else 1-difference
+//                Log.d("differDiffer", (differ).toString() + "|||"+difference)
+                mBackground =  ColorDrawable(ContextCompat.getColor(applicationContext, R.color.black))
+                        .apply { alpha = (differ).toInt()}
+                mTopLevelLayout.background = mBackground
+            }
+        })
     }
 
     fun readyForStartAnimation(savedInstanceState: Bundle?, thumbnailWidth: Int,
@@ -206,7 +223,7 @@ class PictureDetailsActivity : Activity() {
     }
 
     override fun onBackPressed() {
-        mImageView.scale = 1f
+//        mImageView.scale = 1f
         runExitAnimation(Runnable { finish() })
     }
 

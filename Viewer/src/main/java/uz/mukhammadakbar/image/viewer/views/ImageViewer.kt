@@ -10,8 +10,8 @@ import android.util.AttributeSet
 import android.webkit.URLUtil
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import uz.mukhammadakbar.image.viewer.utils.Constants
 import uz.mukhammadakbar.image.viewer.ui.PictureDetailsActivity
+import uz.mukhammadakbar.image.viewer.utils.Constants
 
 class ImageViewer: AppCompatImageView {
 
@@ -22,6 +22,10 @@ class ImageViewer: AppCompatImageView {
     constructor(context: Context): super(context){ init() }
 
     constructor(context: Context, attr: AttributeSet): super(context, attr){ init() }
+
+    private fun init() {
+        initListener()
+    }
 
     fun imageUrl(url: String){
         imageUrl = url
@@ -44,10 +48,6 @@ class ImageViewer: AppCompatImageView {
     fun errorImg(@DrawableRes drawable: Int){
         setImageDrawable(ContextCompat.getDrawable(context, drawable))
         errorImg = drawable
-    }
-
-    private fun init() {
-        initListener()
     }
 
     private fun initListener() {

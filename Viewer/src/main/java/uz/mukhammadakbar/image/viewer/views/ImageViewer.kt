@@ -12,6 +12,9 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import uz.mukhammadakbar.image.viewer.utils.Constants
 import uz.mukhammadakbar.image.viewer.ui.PictureDetailsActivity
+import android.content.ContextWrapper
+
+
 
 class ImageViewer: AppCompatImageView {
 
@@ -54,7 +57,7 @@ class ImageViewer: AppCompatImageView {
         setOnClickListener {
             val screenLocation = IntArray(2)
             getLocationOnScreen(screenLocation)
-            val activity =  context as Activity
+            val activity =  scanForActivity(context)
             val subActivity = Intent(context,
                     PictureDetailsActivity::class.java)
             subActivity.putExtra(Constants.ORIENTATION,  resources.configuration.orientation)
@@ -65,9 +68,18 @@ class ImageViewer: AppCompatImageView {
                     .putExtra(Constants.Y_COORD, screenLocation[1] + (this.height - drawable.intrinsicHeight)/2)
                     .putExtra(Constants.WIDTH, drawable.intrinsicWidth)
                     .putExtra(Constants.HEIGHT, 2*drawable.intrinsicHeight)
-            activity.startActivity(subActivity)
+            activity?.startActivity(subActivity)
 
-            activity.overridePendingTransition(0, 0)
+            activity?.overridePendingTransition(0, 0)
+        }
+    }
+
+    private fun scanForActivity(cont: Context?): Activity? {
+        return when (cont) {
+            null -> null
+            is Activity -> cont
+            is ContextWrapper -> scanForActivity(cont.baseContext)
+            else -> null
         }
     }
 }

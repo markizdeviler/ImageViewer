@@ -4,16 +4,18 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.view.ViewTreeObserver
+import android.view.Window
+import android.view.WindowManager
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
@@ -24,9 +26,8 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
-import com.github.chrisbanes.photoview.PhotoView
-import uz.mukhammadakbar.image.viewer.utils.Constants
 import uz.mukhammadakbar.image.viewer.R
+import uz.mukhammadakbar.image.viewer.utils.Constants
 import uz.mukhammadakbar.image.viewer.views.DraggableImageView
 import uz.mukhammadakbar.image.viewer.views.ShadowLayout
 
@@ -65,7 +66,6 @@ class PictureDetailsActivity : Activity() {
         mOriginalOrientation = bundle.getInt(Constants.ORIENTATION)
 
         mBackground = ColorDrawable(ContextCompat.getColor(applicationContext, R.color.black))
-                .apply { alpha = 0 }
         mTopLevelLayout.background = mBackground
         var bitmap: Bitmap?
         when {
@@ -120,13 +120,16 @@ class PictureDetailsActivity : Activity() {
             }
 
             override fun onDragChanged(difference: Float) {
-                val differ = if (difference > 1) 1f else 1-difference
-//                Log.d("differDiffer", (differ).toString() + "|||"+difference)
-                mBackground =  ColorDrawable(ContextCompat.getColor(applicationContext, R.color.black))
-                        .apply { alpha = (differ).toInt()}
-                mTopLevelLayout.background = mBackground
+                val differ = if (difference > 255) 0f else 255-difference
+                mTopLevelLayout.background.alpha  = differ.toInt()
             }
         })
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            var w = getWindow(); // in Activity's onCreate() for instance
+            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        }
     }
 
     fun readyForStartAnimation(savedInstanceState: Bundle?, thumbnailWidth: Int,

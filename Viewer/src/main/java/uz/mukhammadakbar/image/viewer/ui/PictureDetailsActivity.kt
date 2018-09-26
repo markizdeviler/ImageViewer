@@ -12,9 +12,7 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
-import android.util.Log
 import android.view.ViewTreeObserver
-import android.view.Window
 import android.view.WindowManager
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
@@ -27,6 +25,7 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
 import uz.mukhammadakbar.image.viewer.R
+import uz.mukhammadakbar.image.viewer.listeners.OnDragChangeListener
 import uz.mukhammadakbar.image.viewer.utils.Constants
 import uz.mukhammadakbar.image.viewer.views.DraggableImageView
 import uz.mukhammadakbar.image.viewer.views.ShadowLayout
@@ -114,7 +113,7 @@ class PictureDetailsActivity : Activity() {
             isResourcesReady = true
         }
 
-        mImageView.setOnDragChangeListener(object : DraggableImageView.OnDragChangeListener{
+        mImageView.setOnDragChangeListener(object : OnDragChangeListener {
             override fun onDragFinished() {
                 finish()
             }
@@ -125,10 +124,10 @@ class PictureDetailsActivity : Activity() {
             }
         })
 
-
+        // make toolbar transparent
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            var w = getWindow(); // in Activity's onCreate() for instance
-            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+            val w = window
+            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
         }
     }
 
@@ -226,7 +225,6 @@ class PictureDetailsActivity : Activity() {
     }
 
     override fun onBackPressed() {
-//        mImageView.scale = 1f
         runExitAnimation(Runnable { finish() })
     }
 

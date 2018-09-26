@@ -1,144 +1,55 @@
 package uz.mukhammadakbar.image.viewer.views
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.support.v7.widget.AppCompatImageView
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
-import android.view.View
+import android.view.ScaleGestureDetector
 import android.view.animation.LinearInterpolator
-import uz.mukhammadakbar.image.viewer.utils.Convertor
-import java.util.*
+import uz.mukhammadakbar.image.viewer.listeners.OnCoordinationChangeListener
+import uz.mukhammadakbar.image.viewer.listeners.OnDragChangeListener
+import uz.mukhammadakbar.image.viewer.listeners.OnScaleListener
+import uz.mukhammadakbar.image.viewer.utils.Coordination
+import uz.mukhammadakbar.image.viewer.utils.DragHelper
 
-class DraggableImageView : AppCompatImageView, GestureDetector.OnGestureListener {
+class DraggableImageView : AppCompatImageView, OnCoordinationChangeListener {
 
+    private var dragHelper = DragHelper(context)
     private lateinit var gestureDetector: GestureDetector
 
-    private var dX: Float = 0.toFloat()
-    private var dY:Float = 0.toFloat()
+    private var mScaleGestureDetector: ScaleGestureDetector? = null
+    private val mScaleFactor = 1.0f
 
-    private lateinit var initialView: View
-    private var dragCoefficient= 0f
-    private var onDragChangeListener: OnDragChangeListener ? = null
+    constructor(context: Context) : super(context) { init() }
 
-    constructor(context: Context) : super(context) {
-        init()
-    }
-
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
-        init()
-    }
+    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) { init() }
 
     @SuppressLint("ClickableViewAccessibility")
     private fun init() {
-        initialView = this
-        gestureDetector = GestureDetector(context, this)
-    }
-
-    override fun onShowPress(event: MotionEvent?) {}
-
-    override fun onSingleTapUp(event: MotionEvent?): Boolean {
-        return true
-    }
-
-    override fun onDown(event: MotionEvent?): Boolean = true
-
-    override fun onFling(eventOld: MotionEvent?, eventNew: MotionEvent?, p2: Float, p3: Float)
-            : Boolean = true
-
-    override fun onScroll(event: MotionEvent?, event2: MotionEvent?, p2: Float, p3: Float): Boolean {
-        if (event == null) return true
-
-        if (event2 == null) return true
-
-        dragCoefficient = Convertor.px2Dp(context, Convertor.findNearest(
-                (event.rawX-event2.rawX).toDouble(),(event.rawY - event2.rawY).toDouble()))
-
-        animate()
-                .x(event2.rawX + dX)
-                .y(event2.rawY + dY)
-                .setDuration(0)
-                .start()
-        Log.d("difference", "$dragCoefficient")
-        onDragChangeListener?.onDragChanged( if (dragCoefficient > 0) dragCoefficient else dragCoefficient*-1f)
-        return true
-    }
-
-    override fun onLongPress(event: MotionEvent?) {
-
+        dragHelper.setInitialCord(this)
+        dragHelper.setOnCoordinationChangeListener(this)
+        gestureDetector = GestureDetector(context, dragHelper)
+        mScaleGestureDetector = ScaleGestureDetector(context, OnScaleListener(mScaleFactor, this))
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        when (event?.action) {
-            MotionEvent.ACTION_DOWN -> {
-                dX = this.x - event.rawX
-                dY = this.y - event.rawY
-            }
-            MotionEvent.ACTION_UP ->{
-                Log.d("dragCoef", "coef:${Convertor.px2Dp(context, dragCoefficient)}")
-                if (dragCoefficient in -100..100) {
-                    animateDragToStart(initialView.left.toFloat(), initialView.top.toFloat())
-                    dragCoefficient = if (dragCoefficient > 0) dragCoefficient else dragCoefficient*-1f
-                    val coef = dragCoefficient / 10
-                    Timer().schedule(object : TimerTask(){
-                        override fun run() {
-                            (context as Activity).runOnUiThread {
-                                Log.d("timerTask", "$dragCoefficient")
-                                onDragChangeListener?.onDragChanged(if (dragCoefficient > 0) dragCoefficient else dragCoefficient * -1f)
-                                dragCoefficient -= coef
-                                if (dragCoefficient < 5) this.cancel()
-                            }
-                        }
-                    }, 0, INITITAL_STATE_TIME/10)
-                }else{
-                    animateDragToStart(1000f, -1000f)
-                    dragCoefficient = if (dragCoefficient > 0) dragCoefficient else dragCoefficient*-1f
-                    val coef = (255-dragCoefficient) / 10
-                    Timer().schedule(object : TimerTask(){
-                        override fun run() {
-                            (context as Activity).runOnUiThread {
-                                Log.d("timerTask", "$dragCoefficient")
-                                onDragChangeListener?.onDragChanged(if (dragCoefficient > 0) dragCoefficient else dragCoefficient * -1f)
-                                dragCoefficient += coef
-                                if (dragCoefficient > 250) this.cancel()
-                            }
-                        }
-                    }, 0, EXIT_ANIMATION_TIME/10)
-                    handler.postDelayed({
-                        onDragChangeListener?.onDragFinished()
-                    }, EXIT_ANIMATION_TIME)
-                }
-            }
-            else -> {
-            }
-        }
+        mScaleGestureDetector?.onTouchEvent(event)
+        dragHelper.onTouchEvent(event, Coordination(this.x, this.y))
         return gestureDetector.onTouchEvent(event)
     }
 
-    fun setOnDragChangeListener(onDragChangeListener: OnDragChangeListener){
-        this.onDragChangeListener = onDragChangeListener
-    }
-
-    private fun animateDragToStart(left: Float, top: Float) {
+    override fun coordinationChanged(coordination: Coordination, duration: Long) {
         animate()
-                .x(left)
-                .y(top)
+                .x(coordination.x)
+                .y(coordination.y)
                 .setInterpolator(LinearInterpolator())
-                .setDuration(EXIT_ANIMATION_TIME)
+                .setDuration(duration)
                 .start()
     }
 
-
-    interface OnDragChangeListener{
-        fun onDragFinished()
-        fun onDragChanged(difference: Float)
-    }
-
-    companion object {
-        private const val EXIT_ANIMATION_TIME = 200L
-        private const val INITITAL_STATE_TIME = 400L
+    fun setOnDragChangeListener(onDragChangeListener: OnDragChangeListener) {
+        dragHelper.setOnDragChangeListener(onDragChangeListener)
     }
 }

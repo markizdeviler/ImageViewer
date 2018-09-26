@@ -5,8 +5,13 @@ import android.graphics.*
 import android.graphics.BlurMaskFilter.Blur
 import android.graphics.Paint.Style
 import android.util.AttributeSet
+import android.util.Log
+import uz.mukhammadakbar.image.viewer.listeners.*
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.RelativeLayout
+
 
 class ShadowLayout : RelativeLayout {
 
@@ -24,11 +29,14 @@ class ShadowLayout : RelativeLayout {
         setWillNotDraw(false)
         mShadowBitmap = Bitmap.createBitmap(sShadowRect.width(),
                 sShadowRect.height(), Bitmap.Config.ARGB_8888)
-        val c = Canvas(mShadowBitmap)
         mShadowPaint.maskFilter = BlurMaskFilter(BLUR_RADIUS.toFloat(), Blur.NORMAL)
-        c.translate(BLUR_RADIUS.toFloat(), BLUR_RADIUS.toFloat())
-        c.drawRoundRect(sShadowRectF, sShadowRectF.width() / 40,
-                sShadowRectF.height() / 40, mShadowPaint)
+        Canvas(mShadowBitmap).apply {
+            translate(BLUR_RADIUS.toFloat(), BLUR_RADIUS.toFloat())
+            drawRoundRect(sShadowRectF, sShadowRectF.width() / 40,
+                    sShadowRectF.height() / 40, mShadowPaint)
+        }
+        Log.d("childCount", this.childCount.toString())
+        Log.d("childCount", this.childCount.toString())
     }
 
     fun setShadowDepth(depth: Float) {
@@ -60,7 +68,9 @@ class ShadowLayout : RelativeLayout {
     companion object {
         internal const val BLUR_RADIUS = 200
         internal val sShadowRectF = RectF(0f, 0f, 200f, 200f)
-        internal val sShadowRect = Rect(0, 0, 200 + 2 * BLUR_RADIUS, 200 + 2 * BLUR_RADIUS)
+        internal val sShadowRect = Rect(0, 0,
+                200 + 2 * BLUR_RADIUS,
+                200 + 2 * BLUR_RADIUS)
         internal var tempShadowRectF = RectF(0f, 0f, 0f, 0f)
     }
 }

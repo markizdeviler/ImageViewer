@@ -2,9 +2,24 @@ package uz.mukhammadakbar.image.viewer.utils
 
 enum class DirectionsEnum {
 
-    NORTH_WEST, // LEFT-TOP
-    NORTH_EAST, // RIGHT-TOP
-    SOUTH_WEST, // LEFT-BOTTOM
-    SOUTH_EAST  // RIGHT-BOTTOM
+    /**
+     * LEFT-TOP
+     */
+    NORTH_WEST,
+
+    /**
+     * RIGHT-TOP
+     */
+    NORTH_EAST,
+
+    /**
+     * LEFT-BOTTOM
+     */
+    SOUTH_WEST,
+
+    /**
+     * RIGHT-BOTTOM
+     */
+    SOUTH_EAST
 
 }

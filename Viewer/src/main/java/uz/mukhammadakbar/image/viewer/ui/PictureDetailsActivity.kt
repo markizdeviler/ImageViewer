@@ -29,6 +29,7 @@ import uz.mukhammadakbar.image.viewer.listeners.OnDragChangeListener
 import uz.mukhammadakbar.image.viewer.utils.Constants
 import uz.mukhammadakbar.image.viewer.views.DraggableImageView
 import uz.mukhammadakbar.image.viewer.views.ShadowLayout
+import uz.mukhammadakbar.image.viewer.views.TouchImageView
 
 class PictureDetailsActivity : Activity() {
 
@@ -39,7 +40,7 @@ class PictureDetailsActivity : Activity() {
     private var mTopDelta: Int = 0
     private var mWidthScale: Float = 0.toFloat()
     private var mHeightScale: Float = 0.toFloat()
-    private lateinit var mImageView: DraggableImageView
+    private lateinit var mImageView: TouchImageView
     private lateinit var mTopLevelLayout: FrameLayout
     private lateinit var mShadowLayout: ShadowLayout
     private var mOriginalOrientation: Int = 0

@@ -1,23 +1,17 @@
-package uz.mukhammadakbar.image.viewer.utils.zoom
+package uz.mukhammadakbar.image.viewer.helper
 
 import android.content.Context
-import android.os.Build
 import android.widget.OverScroller
 import android.widget.Scroller
 
 class CompatScroller(context: Context) {
-    internal lateinit var scroller: Scroller
-    internal lateinit var overScroller: OverScroller
-    internal var isPreGingerbread: Boolean = false
+    private lateinit var scroller: Scroller
+    private var overScroller: OverScroller
+    private var isPreGingerbread: Boolean = false
 
     init {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
-            isPreGingerbread = true
-            scroller = Scroller(context)
-        } else {
-            isPreGingerbread = false
-            overScroller = OverScroller(context)
-        }
+        isPreGingerbread = false
+        overScroller = OverScroller(context)
     }
 
     val isFinished: Boolean
@@ -58,11 +52,11 @@ class CompatScroller(context: Context) {
     }
 
     fun computeScrollOffset(): Boolean {
-        if (isPreGingerbread) {
-            return scroller.computeScrollOffset()
+        return if (isPreGingerbread) {
+            scroller.computeScrollOffset()
         } else {
             overScroller.computeScrollOffset()
-            return overScroller.computeScrollOffset()
+            overScroller.computeScrollOffset()
         }
     }
 }

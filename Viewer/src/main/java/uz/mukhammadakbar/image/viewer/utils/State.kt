@@ -1,4 +1,4 @@
-package uz.mukhammadakbar.image.viewer.utils.zoom
+package uz.mukhammadakbar.image.viewer.utils
 
 enum class State {
     NONE,

@@ -14,7 +14,6 @@ import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.view.ViewTreeObserver
 import android.view.WindowManager
-import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import com.bumptech.glide.Glide
@@ -29,7 +28,6 @@ import uz.mukhammadakbar.image.viewer.listeners.OnDragChangeListener
 import uz.mukhammadakbar.image.viewer.utils.Constants
 import uz.mukhammadakbar.image.viewer.views.DraggableImageView
 import uz.mukhammadakbar.image.viewer.views.ShadowLayout
-import uz.mukhammadakbar.image.viewer.views.TouchImageView
 
 class PictureDetailsActivity : Activity() {
 
@@ -40,7 +38,7 @@ class PictureDetailsActivity : Activity() {
     private var mTopDelta: Int = 0
     private var mWidthScale: Float = 0.toFloat()
     private var mHeightScale: Float = 0.toFloat()
-    private lateinit var mImageView: TouchImageView
+    private lateinit var mImageView: DraggableImageView
     private lateinit var mTopLevelLayout: FrameLayout
     private lateinit var mShadowLayout: ShadowLayout
     private var mOriginalOrientation: Int = 0
@@ -226,7 +224,11 @@ class PictureDetailsActivity : Activity() {
     }
 
     override fun onBackPressed() {
-        runExitAnimation(Runnable { finish() })
+        if (mImageView.canBack()){
+            mImageView.onBackPressed()
+        }else {
+            runExitAnimation(Runnable { finish() })
+        }
     }
 
     fun setSaturation(value: Float) {
@@ -242,7 +244,6 @@ class PictureDetailsActivity : Activity() {
 
     companion object {
         private val sDecelerator = DecelerateInterpolator()
-        private val sAccelerator = AccelerateInterpolator()
         private const val ANIM_DURATION = 400
     }
 }

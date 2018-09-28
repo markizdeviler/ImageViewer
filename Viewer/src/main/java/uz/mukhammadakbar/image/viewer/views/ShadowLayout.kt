@@ -35,8 +35,6 @@ class ShadowLayout : RelativeLayout {
             drawRoundRect(sShadowRectF, sShadowRectF.width() / 40,
                     sShadowRectF.height() / 40, mShadowPaint)
         }
-        Log.d("childCount", this.childCount.toString())
-        Log.d("childCount", this.childCount.toString())
     }
 
     fun setShadowDepth(depth: Float) {

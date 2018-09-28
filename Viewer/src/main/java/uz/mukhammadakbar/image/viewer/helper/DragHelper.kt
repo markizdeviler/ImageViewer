@@ -1,4 +1,4 @@
-package uz.mukhammadakbar.image.viewer.utils
+package uz.mukhammadakbar.image.viewer.helper
 
 import android.app.Activity
 import android.content.Context
@@ -12,12 +12,18 @@ import uz.mukhammadakbar.image.viewer.listeners.OnDragChangeListener
 import java.util.*
 import android.os.Handler
 import android.view.View
+import uz.mukhammadakbar.image.viewer.utils.Converter
+import uz.mukhammadakbar.image.viewer.utils.Coordination
+import uz.mukhammadakbar.image.viewer.utils.DirectionsEnum
 
 class DragHelper(private var context: Context): GestureDetector.OnGestureListener {
 
     private var direction: DirectionsEnum? = null
     private var onDragChangeListener: OnDragChangeListener? = null
     private var onCoordinationChangeListener: OnCoordinationChangeListener? = null
+
+    private var isZoomed = false
+    var isDragging = false
 
     private lateinit var initialView: View
     private var dX: Float = 0.toFloat()
@@ -33,12 +39,16 @@ class DragHelper(private var context: Context): GestureDetector.OnGestureListene
     override fun onFling(p0: MotionEvent?, p1: MotionEvent?, p2: Float, p3: Float): Boolean = true
 
     override fun onScroll(event: MotionEvent?, event2: MotionEvent?, p2: Float, p3: Float): Boolean {
+        if (isZoomed) return true
+
+        isDragging = true
+
         if (event == null) return true
 
         if (event2 == null) return true
 
         dragCoefficient = Converter.findNearest(
-                (event.rawX-event2.rawX).toDouble(),(event.rawY - event2.rawY).toDouble()).px2Dp(context)
+                (event.rawX - event2.rawX).toDouble(), (event.rawY - event2.rawY).toDouble()).px2Dp(context)
 
         onCoordinationChangeListener?.coordinationChanged(
                 Coordination(event2.rawX + dX, event2.rawY + dY), 0L)
@@ -88,7 +98,11 @@ class DragHelper(private var context: Context): GestureDetector.OnGestureListene
         }
     }
 
-    fun onTouchEvent(event: MotionEvent?, viewCord: Coordination) {
+    fun onTouchEvent(event: MotionEvent?, viewCord: Coordination, isZoomed: Boolean?) {
+        this.isZoomed = isZoomed == true
+        if (this.isZoomed){
+            return
+        }
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
                 dX = viewCord.x - event.rawX
@@ -121,10 +135,11 @@ class DragHelper(private var context: Context): GestureDetector.OnGestureListene
                     if (dragCoefficient > 250) this.cancel()
                 }
             }
-        }, 0, EXIT_ANIMATION_TIME/10)
+        }, 0, EXIT_ANIMATION_TIME /10)
         val handler = Handler()
         handler.postDelayed({
             onDragChangeListener?.onDragFinished()
+            isDragging = false
         }, EXIT_ANIMATION_TIME)
     }
 
@@ -141,7 +156,9 @@ class DragHelper(private var context: Context): GestureDetector.OnGestureListene
                     if (dragCoefficient < 5) this.cancel()
                 }
             }
-        }, 0, INITIAL_STATE_TIME/10)
+        }, 0, INITIAL_STATE_TIME /10)
+
+        isDragging = false
     }
 
     fun setOnCoordinationChangeListener(onCoordinationChangeListener: OnCoordinationChangeListener){

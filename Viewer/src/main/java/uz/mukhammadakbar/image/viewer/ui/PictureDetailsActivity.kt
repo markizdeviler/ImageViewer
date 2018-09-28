@@ -4,16 +4,16 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.view.ViewTreeObserver
-import android.view.animation.AccelerateInterpolator
+import android.view.WindowManager
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import com.bumptech.glide.Glide
@@ -23,9 +23,10 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
-import com.github.chrisbanes.photoview.PhotoView
-import uz.mukhammadakbar.image.viewer.utils.Constants
 import uz.mukhammadakbar.image.viewer.R
+import uz.mukhammadakbar.image.viewer.listeners.OnDragChangeListener
+import uz.mukhammadakbar.image.viewer.utils.Constants
+import uz.mukhammadakbar.image.viewer.views.DraggableImageView
 import uz.mukhammadakbar.image.viewer.views.ShadowLayout
 
 class PictureDetailsActivity : Activity() {
@@ -37,7 +38,7 @@ class PictureDetailsActivity : Activity() {
     private var mTopDelta: Int = 0
     private var mWidthScale: Float = 0.toFloat()
     private var mHeightScale: Float = 0.toFloat()
-    private lateinit var mImageView: PhotoView
+    private lateinit var mImageView: DraggableImageView
     private lateinit var mTopLevelLayout: FrameLayout
     private lateinit var mShadowLayout: ShadowLayout
     private var mOriginalOrientation: Int = 0
@@ -62,7 +63,7 @@ class PictureDetailsActivity : Activity() {
         val thumbnailHeight = bundle.getInt(Constants.HEIGHT)
         mOriginalOrientation = bundle.getInt(Constants.ORIENTATION)
 
-        mBackground = ColorDrawable(Color.BLACK)
+        mBackground = ColorDrawable(ContextCompat.getColor(applicationContext, R.color.black))
         mTopLevelLayout.background = mBackground
         var bitmap: Bitmap?
         when {
@@ -109,6 +110,23 @@ class PictureDetailsActivity : Activity() {
                     thumbnailLeft, thumbnailTop)
             isAnimated = true
             isResourcesReady = true
+        }
+
+        mImageView.setOnDragChangeListener(object : OnDragChangeListener {
+            override fun onDragFinished() {
+                finish()
+            }
+
+            override fun onDragChanged(difference: Float) {
+                val differ = if (difference > 255) 0f else 255-difference
+                mTopLevelLayout.background.alpha  = differ.toInt()
+            }
+        })
+
+        // make toolbar transparent
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            val w = window
+            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
         }
     }
 
@@ -206,8 +224,11 @@ class PictureDetailsActivity : Activity() {
     }
 
     override fun onBackPressed() {
-        mImageView.scale = 1f
-        runExitAnimation(Runnable { finish() })
+        if (mImageView.canBack()){
+            mImageView.onBackPressed()
+        }else {
+            runExitAnimation(Runnable { finish() })
+        }
     }
 
     fun setSaturation(value: Float) {
@@ -223,7 +244,6 @@ class PictureDetailsActivity : Activity() {
 
     companion object {
         private val sDecelerator = DecelerateInterpolator()
-        private val sAccelerator = AccelerateInterpolator()
         private const val ANIM_DURATION = 400
     }
 }

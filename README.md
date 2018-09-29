@@ -1,6 +1,9 @@
 # ImageViewer
+[![](https://jitpack.io/v/markizdeviler/ImageViewer.svg)](https://jitpack.io/#markizdeviler/ImageViewer)
 
- Simple image viewer library. The library uses PhotoView & Glide
+Simple image viewer library. The library uses Glide for image caching
+
+![ezgif-5-3d31992f4f](https://user-images.githubusercontent.com/22816503/46241323-97ab4d00-c3d0-11e8-900c-c970ce420b5b.gif)
 
 ## Usage	
 
@@ -13,7 +16,7 @@ allprojects {
 }
 
 dependencies {
-   implementation 'com.github.markizdeviler:ImageViewer:master'
+    implementation 'com.github.markizdeviler:ImageViewer:0.0.1'
 }
 ``` 
 

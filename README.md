@@ -30,7 +30,7 @@ dependencies {
 ```java
  imageViewer.imageId(R.drawable.default_image) //default_image for this lib (optional/required)
  imageViewer.imageUrl("image url")             // get image by url (optinal/required)
- imageViewer.errorImg(R.drawable.error_image)  // error image while loading image (optional)
+ imageViewer.errorImg(R.drawable.error_image)  // error image while loading image (optional/required)
  ```
 
 #### Any Issues & contributions appreciated
